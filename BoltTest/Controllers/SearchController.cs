@@ -1,11 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.Http;
-using System.Text;
+using System.Linq;
 using System.Web.Http;
-using System.Web.Http.Results;
-using System.Xml;
-using System.Xml.XPath;
 
 namespace BoltTest.Controllers
 {
@@ -18,10 +14,23 @@ namespace BoltTest.Controllers
             {
                 var response = new Response();
                 response.Items = new List<Item>();
+
                 if (!string.IsNullOrEmpty(term))
                 {
-                    response.Items.AddRange(DataProvider.GetSearchProvider(ProviderType.Google).Search(term));
-                    //response.Items.AddRange(DataProvider.GetSearchProvider(ProviderType.Bing).Search(term));
+                    var items = MemoryCacher.GetValue("results") as List<Item>;
+                    if (items != null && items.Any(e => e.Term == term))
+                    {
+                        response.Items = items;
+                    }
+                    else
+                    {
+                        response.Items.AddRange(DataProvider.GetSearchProvider(ProviderType.Google).Search(term));
+                        //response.Items.AddRange(DataProvider.GetSearchProvider(ProviderType.Bing).Search(term));
+
+                        response.Items.ForEach(i => i.Term = term);
+
+                        MemoryCacher.Add("results", response.Items, DateTimeOffset.UtcNow.AddYears(1));
+                    }
                 }
 
                 return Json(response);

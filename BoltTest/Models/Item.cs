@@ -6,5 +6,6 @@ namespace BoltTest.Controllers
     {
         public string Title { get; set; }
         public ProviderType DataProvider { get; set; }
+        public string Term { get; set; }
     }
 }
